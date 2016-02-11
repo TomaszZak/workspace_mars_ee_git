@@ -1,0 +1,44 @@
+ Albania/Tirana
+ Andora/Andora
+ Austria/Wiedeń
+ Belgia/Bruksela
+ Białoruś/Mińsk
+ Bośnia i Hercegowina/Sarajewo
+ Bułgaria/Sofia
+ Chorwacja/Zagrzeb
+ Czarnogóra/Podgorica
+ Czechy/Praga
+ Dania/Kopenhaga
+ Estonia/Tallinn
+ Finlandia/Helsinki
+ Francja/Paryż
+ Grecja/Ateny
+ Hiszpania/Madryt
+ Holandia/Amsterdam
+ Irlandia/Dublin
+ Islandia/Reykjavík
+ Liechtenstein/Vaduz
+ Litwa/Wilno
+ Luksemburg/Luksemburg
+ Łotwa/Ryga
+ Macedonia/Skopje
+ Malta/Valletta
+ Mołdawia/Kiszyniów
+ Monako/Monako
+ Niemcy/Berlin
+ Norwegia/Oslo
+ Polska/Warszawa
+ Portugalia/Lizbona
+ Rosja/Moskwa
+ Rumunia/Bukareszt
+ San Marino/San Marino
+ Serbia/Belgrad
+ Słowacja/Bratysława
+ Słowenia/Lublana
+ Szwajcaria/Berno
+ Szwecja/Sztokholm
+ Ukraina/Kijów
+ Watykan/Watykan
+ Węgry/Budapeszt
+ Wielka Brytania/Londyn
+ Włochy/Rzym

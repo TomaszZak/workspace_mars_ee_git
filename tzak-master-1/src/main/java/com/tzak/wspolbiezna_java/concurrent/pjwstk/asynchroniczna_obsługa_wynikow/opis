@@ -1,0 +1,4 @@
+Rozważmy nieco bardziej uniwersalny i zaawansowany przykład dostarczenia asynchronicznej obsługi wyników zadań. Umówimy się, 
+że metoda obsługi (dowolna metoda dowolnej klasy) otrzymuje jako argumenty - wynik zadania,
+oraz ew. wyjątek. Jeśli wyjątek nie powstał (nie było ani CancellationException, ani ExecutionException) - to ten drugi argument
+ma wartość null. Jeśli zaś powstał - to piewrszy argument ma wartość null.
