@@ -1,6 +1,6 @@
 package com.tzak.wspolbiezna_java.concurrent.pjwstk;
 
-//klasa reprezentująca pojedyncze zadanie
+//klasa reprezentująca pojedyncze zadanie - Runnable
 public class WykonawcaZadanZadanieDoWykonania implements Runnable {
 
 	private String name;
