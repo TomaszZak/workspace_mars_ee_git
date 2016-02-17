@@ -67,15 +67,19 @@ public class SamplePjwstkConcurrentMain {
 		 * zakończeniu zadania.*/	
 		pojedynczeZadanieFutureTaskCallableDone = new FutureTask<String>(new Callable<String>() {
 			public String call() {
+				String result = null;
 				for (int i = 1; i <= 3; i++) {
-					System.out.println(i);
+					if (Thread.currentThread().isInterrupted()) return null; //Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
+					System.out.println("Wykonuje zadanie Callable: pojedynczeZadanieZWynikiemCallable");
+
+					przykladoweOperacjeDoPrzerwaniaInterrupt();
 
 				}
-				return null;
+				return result;
 			}
 		}) {
 			public void done() {
-				System.out.println("Done.");
+				System.out.println("Done() - zadania do wykonania po zamknięciu wątku");
 			}
 		};
 
@@ -112,10 +116,10 @@ public class SamplePjwstkConcurrentMain {
 		FutureTask<Boolean> zadanieBezPrzerwania2 = new FutureTask<Boolean>(pojedynczeZadanieBezWynikuRunnable, true);  //obiekt runnable z przekazanym na sztywno wynikiem true
 //		FutureTask<Object> zadanieBezPrzerwania3 = new FutureTask<Object>(Executors.callable(pojedynczeZadanieBezWynikuRunnable));  //wrzucenie na sztywno do Runnable wyniku NULL
 
-		taskStartCallable(zadanieCallableZPrzerwaniem1);
-		taskStartCallable(zadanieCallableZPrzerwaniem2);
-		taskStartCallable(zadanieCallableBezPrzerwania1);
-		
+		taskStartCallableFutureTask(zadanieCallableZPrzerwaniem1);
+		taskStartCallableFutureTask(zadanieCallableZPrzerwaniem2);
+		taskStartCallableFutureTask(zadanieCallableBezPrzerwania1);
+
 	}
 	
 	
@@ -123,59 +127,61 @@ public class SamplePjwstkConcurrentMain {
 	 * Metoda z przykladem zastosowania FutureTaskow
 	 * z obsluga anulowania i metoda done()
 	 */
-		public static void przykladWykorzystaniaFutureTaskow() {
+	public static void przykladWykorzystaniaFutureTaskow() {
 
-			//###### tworzenie zadan FutureTaskow - przyklad kiedy nie korzystamy z Future
+		//###### tworzenie zadan FutureTaskow - przyklad kiedy nie korzystamy z Future
 			
-			/** tworzymy zadania wspolbierzne do wykonania - z obslugą przerwania z metodą done*/
-			ZadanieZObslugaPrzerwanZadan<String> zadanieZPrzerwaniem1 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczeZadanieZWynikiemCallable);
-			ZadanieZObslugaPrzerwanZadan<String> zadanieZPrzerwaniem2 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczaKlasaZadanieDoWykonaniaCallable);
+		/** tworzymy zadania wspolbierzne do wykonania - z obslugą przerwania z metodą done*/
+		ZadanieZObslugaPrzerwanZadan<String> zadanieZPrzerwaniem1 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczeZadanieZWynikiemCallable);
+		ZadanieZObslugaPrzerwanZadan<String> zadanieZPrzerwaniem2 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczaKlasaZadanieDoWykonaniaCallable);
 			
-			/** tworzymy zadania wspolbierzne do wykonania - bez obslugi przerwania z metodą done*/
-			FutureTask<String> zadanieBezPrzerwania1 = new FutureTask<String>(pojedynczeZadanieZWynikiemCallable);
-			FutureTask<Boolean> zadanieBezPrzerwania2 = new FutureTask<Boolean>(pojedynczeZadanieBezWynikuRunnable, true);  //obiekt runnable z przekazanym na sztywno wynikiem true
-//			FutureTask<Object> zadanieBezPrzerwania3 = new FutureTask<Object>(Executors.callable(pojedynczeZadanieBezWynikuRunnable));  //wrzucenie na sztywno do Runnable wyniku NULL
+		/** tworzymy zadania wspolbierzne do wykonania - bez obslugi przerwania z metodą done*/
+		FutureTask<String> zadanieBezPrzerwania1 = new FutureTask<String>(pojedynczeZadanieZWynikiemCallable);
+		FutureTask<Boolean> zadanieBezPrzerwania2 = new FutureTask<Boolean>(pojedynczeZadanieBezWynikuRunnable, true);  //obiekt runnable z przekazanym na sztywno wynikiem true
+//		FutureTask<Object> zadanieBezPrzerwania3 = new FutureTask<Object>(Executors.callable(pojedynczeZadanieBezWynikuRunnable));  //wrzucenie na sztywno do Runnable wyniku NULL
 
-			/** tworzymy wykonawce zdan */
-//			exec = Executors.newCachedThreadPool(); //Wykonawca,prowadzący pulę wątków o dynamicznych rozmiarach
-			exec = Executors.newSingleThreadExecutor();  //jeden wątek
+		/** tworzymy wykonawce zdan */
+//		exec = Executors.newCachedThreadPool(); //Wykonawca,prowadzący pulę wątków o dynamicznych rozmiarach
+		exec = Executors.newSingleThreadExecutor(); // jeden wątek
 
-			exec.execute(zadanieZPrzerwaniem1);
-			exec.execute(zadanieZPrzerwaniem2);
-			
-			/**Kończenie pracy wykonawcy zadan - executora */
+		exec.execute(zadanieZPrzerwaniem1);
+		exec.execute(zadanieZPrzerwaniem2);
+
+		/** Kończenie pracy wykonawcy zadan - executora */
 			//  Thread.yield(); //dobrowolnego oddania czasuprocesora - Wykonujący się wątek (będący w stanie Running) może dobrowolnie oddać czas procesora za pomocą wywolania metody yield() . Przy tym nie następuje jednak zwolnienie rygla. Wątek pozostaje w stanie Runnable, ale czeka na ponowne przydzielenie czasu procesora.
-			  exec.shutdown();
-		
-		
-		}
-	
+		exec.shutdown();
 
-	
-	public static void przykladoweOperacjeDoPrzerwaniaInterrupt() {
-		String name = "przykladoweOperacjeDoPrzerwaniaInterrupt";
-	    for (byte i=1; i <= 128 ; i++) {
-	        if (Thread.currentThread().isInterrupted()) return;
-	     //   System.out.println(name + " " + i);
-	      }
 	}
 
+	public static void przykladoweOperacjeDoPrzerwaniaInterrupt() {
+		String name = "przykladoweOperacjeDoPrzerwaniaInterrupt";
+		for (byte i = 1; i <= 128; i++) {
+			if (Thread.currentThread().isInterrupted())
+				return;
+			// System.out.println(name + " " + i);
+		}
+	}
 	
 	
 	
 	
-	//Metody obslugujace uruchamianie i zatrzymywanie zadan
-	
-	  public static <T> void taskStartCallable(FutureTask<T> callableFutureTask) {
-		    try {
-		   exec.execute(callableFutureTask);
-		    } catch(RejectedExecutionException exc) {
-		        System.out.println("Task after shutdown");
-		        return;
-		    }
-		    System.out.println("Uruchomiono zadanie z metody taskStartCallable");
-		  }
-	  
+	/**
+	 * Metody obslugujace uruchamianie i zatrzymywanie zadan
+	 * 
+	 * @param callableFutureTask
+	 *            - dzięki patametrowi FutureTask obsluguje metode done()
+	 */
+
+	public static <T> void taskStartCallableFutureTask(FutureTask<T> callableFutureTask) {
+		try {
+			exec.execute(callableFutureTask);
+		} catch (RejectedExecutionException exc) {
+			System.out.println("Task after shutdown");
+			return;
+		}
+		System.out.println("Uruchomiono zadanie z metody taskStartCallable");
+	}
+
 /*	  public void taskStartRunnable(Runnable runnableTask) {
 		    try {
 		    	exec.execute(runnableTask, true);
@@ -205,30 +211,34 @@ public class SamplePjwstkConcurrentMain {
 		    task.cancel(true);
 		  }
 */
-		  public void executorShutdown() {
-		    exec.shutdown();
-		    System.out.println("Executor shutdown\n");    
+	public void executorShutdown() {
+		exec.shutdown();
+		System.out.println("Executor shutdown\n");  
 
 		 // Na końcu programu - za pomocą metody awaitTermination(...) wstrzymujemy bieżący wątek dopóki Wykonawca nie zakończy wszystkich zadań (albo dopóki nie minie 5 sekund lub też nie wystąpi przerwanie bieżącego wątku za pomocą metody interrupt). Warto stosować metodę awaitTermination(),  kiedy chcemy mieć pewność, że Wykonawaca naprawdę zakończył działanie i wyczyścił  wszystkie swoje zajęte zasoby (np. bez tego nasz głowny wątek może sie skończyć wcześniej niż Wykonawcy i aplikacja nie zakończy działania).
-	    try {
-	        exec.awaitTermination(5, TimeUnit.SECONDS);
-	      } catch(InterruptedException exc) { exc.printStackTrace(); }
-	      System.out.println("Terminated: " + exec.isTerminated()); 
-		  }
+		try {
+			exec.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (InterruptedException exc) {
+			exc.printStackTrace();
+		}
+		System.out.println("Terminated: " + exec.isTerminated());
+	}
 
-		  public void executorShutdownNow() {
-			  		  
-		    List<Runnable> awaiting = exec.shutdownNow();
-		    System.out.println("Eeecutor shutdown now - awaiting tasks:\n");
-		    for (Runnable r : awaiting) {
-		      System.out.println(r.getClass().getName()+'\n');
-		    }
+	public void executorShutdownNow() {
+
+		List<Runnable> awaiting = exec.shutdownNow();
+		System.out.println("Eeecutor shutdown now - awaiting tasks:\n");
+		for (Runnable r : awaiting) {
+			System.out.println(r.getClass().getName() + '\n');
+		}
 			 // Na końcu programu - za pomocą metody awaitTermination(...) wstrzymujemy bieżący wątek dopóki Wykonawca nie zakończy wszystkich zadań (albo dopóki nie minie 5 sekund lub też nie wystąpi przerwanie bieżącego wątku za pomocą metody interrupt). Warto stosować metodę awaitTermination(),  kiedy chcemy mieć pewność, że Wykonawaca naprawdę zakończył działanie i wyczyścił  wszystkie swoje zajęte zasoby (np. bez tego nasz głowny wątek może sie skończyć wcześniej niż Wykonawcy i aplikacja nie zakończy działania).
-		    try {
-		        exec.awaitTermination(5, TimeUnit.SECONDS);
-		      } catch(InterruptedException exc) { exc.printStackTrace(); }
-		      System.out.println("Terminated: " + exec.isTerminated()); 
-		  }
+		try {
+			exec.awaitTermination(5, TimeUnit.SECONDS);
+		} catch (InterruptedException exc) {
+			exc.printStackTrace();
+		}
+		System.out.println("Terminated: " + exec.isTerminated());
+	}
 }
 
 /** Przykladowa klasa zadania do wykonania w watku 
