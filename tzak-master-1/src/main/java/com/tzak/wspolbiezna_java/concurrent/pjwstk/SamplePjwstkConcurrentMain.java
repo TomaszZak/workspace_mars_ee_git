@@ -1,12 +1,15 @@
 package com.tzak.wspolbiezna_java.concurrent.pjwstk;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JOptionPane;
@@ -26,7 +29,7 @@ public class SamplePjwstkConcurrentMain {
 	// ###################### MAIN
 	public static void main(String[] args) {
 
-		uspienieWykonywaniaWMiliSekundach = 3600000; // uśpienie na godzinę
+		uspienieWykonywaniaWMiliSekundach = 10; //3600000; // uśpienie na godzinę
 
 		// ####### tworzenie przykładow obiektow do wykonania w watkach
 		/**
@@ -41,6 +44,7 @@ public class SamplePjwstkConcurrentMain {
 
 				przykladoweOperacjeWPetli();
 
+				Thread.sleep(10000);
 				// uspienie watku - sleep(n) says “I’m done with my timeslice, and please don’t give me another one for at least n milliseconds.”
 				if (Thread.currentThread().isInterrupted())
 					return null; // chcemy przerwać możliwie najszybciej
@@ -64,8 +68,8 @@ public class SamplePjwstkConcurrentMain {
 					return; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
 				System.out.println("Wykonuje zadanie Runnable: pojedynczeZadanieBezWynikuRunnable");
 
+//				przykladoweOperacjeDoPrzerwaniaInterrupt();
 				przykladoweOperacjeWPetli();
-
 				// uspienie watku - sleep(n) says “I’m done with my timeslice, and please don’t give me another one for at least n milliseconds.”
 				if (Thread.currentThread().isInterrupted())
 					return; // chcemy przerwać możliwie najszybciej
@@ -116,9 +120,11 @@ public class SamplePjwstkConcurrentMain {
 		// ####### koniec - przykładow obiektow do wykonania w watkach
 
 		// ## Testy
-		// przykladWykorzystaniaFutureTaskow();
-		przykladGlowny();
+//		 przykladWykorzystaniaFutureTaskow();
+//		przykladGlowny();
+		testShedulerTaskow();
 
+		
 	}
 	// ############## Koniec MAINA
 
@@ -133,12 +139,72 @@ public class SamplePjwstkConcurrentMain {
 		/** tworzymy zadania wspolbierzne do wykonania - bez obslugi przerwania z metodą done */
 		FutureTask<String> zadanieCallableBezPrzerwania1 = new FutureTask<String>(pojedynczeZadanieZWynikiemCallable);
 		FutureTask<Boolean> zadanieBezPrzerwania2 = new FutureTask<Boolean>(pojedynczeZadanieBezWynikuRunnable, true); // obiekt runnable z przekazanym na sztywno wynikiem true
+		FutureTask<Boolean> zadanieBezPrzerwania3 = new FutureTask<Boolean>(pojedynczeZadanieBezWynikuRunnable, true); // obiekt runnable z przekazanym na sztywno wynikiem true
 		// FutureTask<Object> zadanieBezPrzerwania3 = new FutureTask<Object>(Executors.callable(pojedynczeZadanieBezWynikuRunnable)); //wrzucenie na sztywno do Runnable wyniku NULL
 
-		taskStartCallableFutureTask(zadanieCallableZPrzerwaniem1);
-		taskStartCallableFutureTask(zadanieCallableZPrzerwaniem2);
-		taskStartCallableFutureTask(zadanieCallableBezPrzerwania1);
+		ZadanieZObslugaPrzerwanZadan<String> zadanieZPrzerwaniem1 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczeZadanieZWynikiemCallable);
+		ZadanieZObslugaPrzerwanZadan<String> zadanieZPrzerwaniem2 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczaKlasaZadanieDoWykonaniaCallable);
 
+		
+//		taskStartCallableFutureTask(zadanieCallableZPrzerwaniem1);
+//		taskStartCallableFutureTask(zadanieCallableZPrzerwaniem2);
+//		taskStartCallableFutureTask(zadanieCallableBezPrzerwania1);
+		
+
+//		taskStartCallableFutureTask(zadanieZPrzerwaniem1);
+//		taskStartCallableFutureTask(zadanieZPrzerwaniem2);
+
+//		exec.shutdown();
+		
+		ScheduledExecutorService scheduledExecutorService =
+		        Executors.newScheduledThreadPool(5); //5 watkow w puli
+
+ScheduledFuture scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(zadanieZPrzerwaniem1,1,7, TimeUnit.SECONDS);
+//System.out.println("Czy zakonczono watki?");
+//System.out.println(scheduledFuture.isDone());
+
+	}
+	
+	public static void testShedulerTaskow() {
+		FutureTask<Boolean> zadanieBezPrzerwania2 = new FutureTask<Boolean>(pojedynczeZadanieBezWynikuRunnable, true);
+		// given
+		Random random = new Random();
+		ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
+		// when
+		executorService.scheduleAtFixedRate(
+//				zadanieBezPrzerwania2
+				new Runnable() {
+					private int i = 1;
+
+					@Override
+					public void run() {
+						System.out.println("Iteration[{}]");
+						i++;
+						try {
+							Thread.sleep(300);
+						} catch (InterruptedException e) {
+						}
+					}
+				}
+				
+				, 200, 1000, TimeUnit.MILLISECONDS);
+		System.out.println("Starting...");
+
+		try {
+			Thread.sleep(2000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	//	executorService.shutdown();
+		System.out.println("... finished!");
+		try {
+			executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -172,7 +238,19 @@ public class SamplePjwstkConcurrentMain {
 		for (byte i = 1; i <= 128; i++) {
 			if (Thread.currentThread().isInterrupted())
 				return;
-			// System.out.println(name + " " + i);
+			System.out.print(i + " ");
+			//Thread.yield(); //yield - pozwala wejść do kolejki innym wątkom jezeli ten jest bezczynny
+			
+			
+			//opuznienie w zadaniu
+			if (Thread.currentThread().isInterrupted())
+				return; // chcemy przerwać możliwie najszybciej
+			try { // sleep() jest przerywane pzrez interrupt()!
+				Thread.sleep(700);
+			} catch (InterruptedException exc) {
+				System.out.println("Wątek zliczania czasu został przerwany.");
+				return;
+			}
 			Thread.yield(); // ddanie czasu procesora innemu oczekującemu wątkowi, który ma wyższy lub taki sam priorytet
 		}
 	}
@@ -180,7 +258,7 @@ public class SamplePjwstkConcurrentMain {
 	// metoda jest synchronizowana- zapewnia, że kilka wykonujących się wątków nie będzie równocześnie wykonywać tego samego kodu, w szczególności - działać na tym samym obiekcie.
 	synchronized public static void przykladoweOperacjeWPetli() {
 		String name = "przykladoweOperacjeWPetli";
-		for (int i = 1; i <= 5; i++) {
+		for (int i = 1; i <= 10; i++) {
 			if (Thread.currentThread().isInterrupted())
 				return;
 			System.out.print(i + " ");
@@ -238,9 +316,9 @@ public class SamplePjwstkConcurrentMain {
 
 		System.out.println("Liczba dostepnych procesorow: " + Runtime.getRuntime().availableProcessors());
 		// exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		// exec = Executors.newCachedThreadPool(); //Wykonawca,prowadzący pulę wątków o dynamicznych rozmiarach
-
-		exec = Executors.newSingleThreadExecutor(); // jeden wątek - pula z obsluga jednego watku na raz
+		 exec = Executors.newCachedThreadPool(); //Wykonawca,prowadzący pulę wątków o dynamicznych rozmiarach
+//		exec = Executors.newFixedThreadPool(2);
+//		exec = Executors.newSingleThreadExecutor(); // jeden wątek - pula z obsluga jednego watku na raz
 	}
 
 	public void executorShutdown() {
@@ -281,7 +359,7 @@ class KlasaZadaniaDoWykonaniaCallable implements Callable<String> {
 	// przykladowe pole klasy - moze byc wynikowe
 	private String result;
 
-	int uspienieWykonywaniaWMiliSekundach = 3600000;
+	int uspienieWykonywaniaWMiliSekundach = 10; //3600000;
 
 	public KlasaZadaniaDoWykonaniaCallable() {
 	}
