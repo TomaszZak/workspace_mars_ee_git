@@ -15,6 +15,7 @@ public class SamplePjwstkConcurrentMain {
 
 	// reprezentuje zadanie do wykonania
 	// static Future<String> task;
+	static int uspienieWykonywaniaWMiliSekundach;
 	static Callable<String> pojedynczeZadanieZWynikiemCallable;
 	static Runnable pojedynczeZadanieBezWynikuRunnable;
 	static ExecutorService exec;
@@ -25,10 +26,9 @@ public class SamplePjwstkConcurrentMain {
 	// ###################### MAIN
 	public static void main(String[] args) {
 
-		// wykonywanie zadan - przyklad
+		uspienieWykonywaniaWMiliSekundach = 3600000; // uśpienie na godzinę
 
 		// ####### tworzenie przykładow obiektow do wykonania w watkach
-
 		/**
 		 * przykladowe zadanie do wykonania z wynikiem - watek Callable zapewniajacy zwrot wyniku - Runnable tego nie zapewnia
 		 */
@@ -39,18 +39,20 @@ public class SamplePjwstkConcurrentMain {
 				System.out.println("Wykonuje zadanie Callable: pojedynczeZadanieZWynikiemCallable");
 				String result = null;
 
-				przykladoweOperacjeDoPrzerwaniaInterrupt();
+				przykladoweOperacjeWPetli();
 
 				// uspienie watku - sleep(n) says “I’m done with my timeslice, and please don’t give me another one for at least n milliseconds.”
 				if (Thread.currentThread().isInterrupted())
 					return null; // chcemy przerwać możliwie najszybciej
+				
+//				Thread.yield();
+//				wait();
 				try { // sleep() jest przerywane pzrez interrupt()!
-					Thread.sleep(1000);
+					Thread.sleep(uspienieWykonywaniaWMiliSekundach);
 				} catch (InterruptedException exc) {
 					System.out.println("Wątek zliczania czasu został przerwany.");
 					return null;
 				}
-
 				return result;
 			}
 		};
@@ -62,19 +64,18 @@ public class SamplePjwstkConcurrentMain {
 					return; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
 				System.out.println("Wykonuje zadanie Runnable: pojedynczeZadanieBezWynikuRunnable");
 
-				przykladoweOperacjeDoPrzerwaniaInterrupt();
+				przykladoweOperacjeWPetli();
 
 				// uspienie watku - sleep(n) says “I’m done with my timeslice, and please don’t give me another one for at least n milliseconds.”
 				if (Thread.currentThread().isInterrupted())
 					return; // chcemy przerwać możliwie najszybciej
 				try { // sleep() jest przerywane pzrez interrupt()!
-					Thread.sleep(1000);
+					Thread.sleep(uspienieWykonywaniaWMiliSekundach);
 				} catch (InterruptedException exc) {
 					System.out.println("Wątek zliczania czasu został przerwany.");
 					return;
 				}
 			}
-
 		};
 
 		/**
@@ -88,13 +89,13 @@ public class SamplePjwstkConcurrentMain {
 						return null; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
 					System.out.println("Wykonuje zadanie Callable: pojedynczeZadanieZWynikiemCallable");
 
-					przykladoweOperacjeDoPrzerwaniaInterrupt();
+					przykladoweOperacjeWPetli();
 
 					// uspienie watku - sleep(n) says “I’m done with my timeslice, and please don’t give me another one for at least n milliseconds.”
 					if (Thread.currentThread().isInterrupted())
 						return null; // chcemy przerwać możliwie najszybciej
 					try { // sleep() jest przerywane pzrez interrupt()!
-						Thread.sleep(1000);
+						Thread.sleep(uspienieWykonywaniaWMiliSekundach);
 					} catch (InterruptedException exc) {
 						System.out.println("Wątek zliczania czasu został przerwany.");
 						return null;
@@ -122,14 +123,9 @@ public class SamplePjwstkConcurrentMain {
 	// ############## Koniec MAINA
 
 	public static void przykladGlowny() {
-
-		System.out.println("Liczba dostepnych procesorow: " + Runtime.getRuntime().availableProcessors());
-		// exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-		exec = Executors.newSingleThreadExecutor();
-		// exec = Executors.newCachedThreadPool(); //Wykonawca,prowadzący pulę wątków o dynamicznych rozmiarach
+		executorCreate(); // tworzymy wykonawcę zadań
 
 		// ###### tworzenie zadan FutureTaskow - przyklad kiedy nie korzystamy z Future
-
 		/** tworzymy zadania wspolbierzne do wykonania - z obslugą przerwania z metodą done */
 		ZadanieZObslugaPrzerwanZadan<String> zadanieCallableZPrzerwaniem1 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczeZadanieZWynikiemCallable);
 		ZadanieZObslugaPrzerwanZadan<String> zadanieCallableZPrzerwaniem2 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczaKlasaZadanieDoWykonaniaCallable);
@@ -149,9 +145,9 @@ public class SamplePjwstkConcurrentMain {
 	 * Metoda z przykladem zastosowania FutureTaskow z obsluga anulowania i metoda done()
 	 */
 	public static void przykladWykorzystaniaFutureTaskow() {
+		executorCreate(); // tworzymy wykonawcę zadań
 
 		// ###### tworzenie zadan FutureTaskow - przyklad kiedy nie korzystamy z Future
-
 		/** tworzymy zadania wspolbierzne do wykonania - z obslugą przerwania z metodą done */
 		ZadanieZObslugaPrzerwanZadan<String> zadanieZPrzerwaniem1 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczeZadanieZWynikiemCallable);
 		ZadanieZObslugaPrzerwanZadan<String> zadanieZPrzerwaniem2 = new ZadanieZObslugaPrzerwanZadan<String>(pojedynczaKlasaZadanieDoWykonaniaCallable);
@@ -160,10 +156,6 @@ public class SamplePjwstkConcurrentMain {
 		FutureTask<String> zadanieBezPrzerwania1 = new FutureTask<String>(pojedynczeZadanieZWynikiemCallable);
 		FutureTask<Boolean> zadanieBezPrzerwania2 = new FutureTask<Boolean>(pojedynczeZadanieBezWynikuRunnable, true); // obiekt runnable z przekazanym na sztywno wynikiem true
 		// FutureTask<Object> zadanieBezPrzerwania3 = new FutureTask<Object>(Executors.callable(pojedynczeZadanieBezWynikuRunnable)); //wrzucenie na sztywno do Runnable wyniku NULL
-
-		/** tworzymy wykonawce zdan */
-		// exec = Executors.newCachedThreadPool(); //Wykonawca,prowadzący pulę wątków o dynamicznych rozmiarach
-		exec = Executors.newSingleThreadExecutor(); // jeden wątek
 
 		exec.execute(zadanieZPrzerwaniem1);
 		exec.execute(zadanieZPrzerwaniem2);
@@ -174,15 +166,36 @@ public class SamplePjwstkConcurrentMain {
 
 	}
 
-	
-	//metoda jest synchronizowana- zapewnia, że kilka wykonujących się wątków nie będzie równocześnie wykonywać tego samego kodu, w szczególności - działać na tym samym obiekcie.
+	// metoda jest synchronizowana- zapewnia, że kilka wykonujących się wątków nie będzie równocześnie wykonywać tego samego kodu, w szczególności - działać na tym samym obiekcie.
 	synchronized public static void przykladoweOperacjeDoPrzerwaniaInterrupt() {
 		String name = "przykladoweOperacjeDoPrzerwaniaInterrupt";
 		for (byte i = 1; i <= 128; i++) {
 			if (Thread.currentThread().isInterrupted())
 				return;
 			// System.out.println(name + " " + i);
-			Thread.yield();  //ddanie czasu procesora innemu oczekującemu wątkowi, który ma wyższy lub taki sam priorytet
+			Thread.yield(); // ddanie czasu procesora innemu oczekującemu wątkowi, który ma wyższy lub taki sam priorytet
+		}
+	}
+
+	// metoda jest synchronizowana- zapewnia, że kilka wykonujących się wątków nie będzie równocześnie wykonywać tego samego kodu, w szczególności - działać na tym samym obiekcie.
+	synchronized public static void przykladoweOperacjeWPetli() {
+		String name = "przykladoweOperacjeWPetli";
+		for (int i = 1; i <= 5; i++) {
+			if (Thread.currentThread().isInterrupted())
+				return;
+			System.out.print(i + " ");
+			//Thread.yield(); //yield - pozwala wejść do kolejki innym wątkom jezeli ten jest bezczynny
+			
+			
+			//opuznienie w zadaniu
+			if (Thread.currentThread().isInterrupted())
+				return; // chcemy przerwać możliwie najszybciej
+			try { // sleep() jest przerywane pzrez interrupt()!
+				Thread.sleep(700);
+			} catch (InterruptedException exc) {
+				System.out.println("Wątek zliczania czasu został przerwany.");
+				return;
+			}
 		}
 	}
 
@@ -197,7 +210,7 @@ public class SamplePjwstkConcurrentMain {
 		try {
 			exec.execute(callableFutureTask);
 		} catch (RejectedExecutionException exc) {
-			System.out.println("Task after shutdown");
+			System.err.println("Wyjątek: RejectedExecutionException - próba uruchomienia zadania po zamknięciu executora (metoda shutdown()), lub z innego powodu ExecutorService odmawia wykonanie zadania");
 			return;
 		}
 		System.out.println("Uruchomiono zadanie z metody taskStartCallable");
@@ -211,8 +224,23 @@ public class SamplePjwstkConcurrentMain {
 	 * public void taskResult() { String msg = ""; if (task.isCancelled()) msg = "Task cancelled."; else if (task.isDone()) { try { msg = "Ready. Result = " + task.get(); } catch(Exception exc) { msg = exc.getMessage(); } } else msg = "Task is running or waiting for execution"; JOptionPane.showMessageDialog(null, msg); }
 	 */
 
+	/**
+	 * Cancel - Próbuje anulować wykonanie zadania (argument mówi o tym, czy można przerwać wykonujące się zadanie). Nie wykonujące się (jeszcze) zadania są usuwane z listy zadań Wykonawcy.
+	 */
 	public void taskStop() {
-		klasaFutureTaskZObslugaPrzerwanZadan.cancel(true);  //anulować mozna obiekty FutureTask
+		klasaFutureTaskZObslugaPrzerwanZadan.cancel(true); // anulować mozna obiekty FutureTask - one obsluguja cancel
+	}
+
+	/**
+	 * Metoda tworzy wykonawce zadan - obsluga watkow Bez ustawie czasowych, opóźnień i terminów
+	 */
+	public static void executorCreate() {
+
+		System.out.println("Liczba dostepnych procesorow: " + Runtime.getRuntime().availableProcessors());
+		// exec = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+		// exec = Executors.newCachedThreadPool(); //Wykonawca,prowadzący pulę wątków o dynamicznych rozmiarach
+
+		exec = Executors.newSingleThreadExecutor(); // jeden wątek - pula z obsluga jednego watku na raz
 	}
 
 	public void executorShutdown() {
@@ -253,39 +281,51 @@ class KlasaZadaniaDoWykonaniaCallable implements Callable<String> {
 	// przykladowe pole klasy - moze byc wynikowe
 	private String result;
 
+	int uspienieWykonywaniaWMiliSekundach = 3600000;
+
 	public KlasaZadaniaDoWykonaniaCallable() {
 	}
 
 	// metoda wywolywana w watku - z wyniikiem String
-	@Override
 	public String call() throws Exception {
 		if (Thread.currentThread().isInterrupted())
 			return null; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
 		System.out.println("Wykonuje zadanie Callable: KlasaZadaniaDoWykonaniaCallable");
 		result = "wynik" + " temp";
-		
-		synchronized (result) { //zakładamy rygiel na zmienna - Bloki synchronizowane wprowadzane są instrukcją synchronized z podaną w nawiasie referencją do obiektu, który ma być zaryglowany. 
+
+		synchronized (result) { // zakładamy rygiel na zmienna - Bloki synchronizowane wprowadzane są instrukcją synchronized z podaną w nawiasie referencją do obiektu, który ma być zaryglowany.
 			result = result + " operacje synchronizowane. Zmienna zaryglowana";
 		}
-		
+
 		// Przykladowe operacje --------
 		String name = "KlasaZadaniaDoWykonaniaCallable";
-		for (byte i = 1; i <= 128; i++) {
+		for (int i = 1; i <= 5; i++) {
 			if (Thread.currentThread().isInterrupted())
 				return null;
-			// System.out.println(name + " " + i);
+			System.out.print(i + " ");
+			//Thread.yield(); // ddanie czasu procesora innemu oczekującemu wątkowi, który ma wyższy lub taki sam priorytet
+			
+			//opuznienie w zadaniu
+			if (Thread.currentThread().isInterrupted())
+				return null; // chcemy przerwać możliwie najszybciej
+			try { // sleep() jest przerywane pzrez interrupt()!
+				Thread.sleep(700);
+			} catch (InterruptedException exc) {
+				System.out.println("Wątek zliczania czasu został przerwany.");
+				return null;
+			}
 		}
-		
+
 		// uspienie watku - sleep(n) says “I’m done with my timeslice, and please don’t give me another one for at least n milliseconds.”
 		if (Thread.currentThread().isInterrupted())
 			return null; // chcemy przerwać możliwie najszybciej
 		try { // sleep() jest przerywane pzrez interrupt()!
-			Thread.sleep(1000);
+			Thread.sleep(uspienieWykonywaniaWMiliSekundach);
 		} catch (InterruptedException exc) {
 			System.out.println("Wątek zliczania czasu został przerwany.");
 			return null;
 		}
-		
+
 		// koniec operacji -------
 
 		return result;

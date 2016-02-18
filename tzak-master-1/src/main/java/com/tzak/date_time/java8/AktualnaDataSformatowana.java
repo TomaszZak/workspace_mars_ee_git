@@ -12,7 +12,16 @@ public class AktualnaDataSformatowana {
 		System.out.println(todaySformatowane);
 		todaySformatowane = today.format(DateTimeFormatter.ofPattern("dd:MM:uuuu HH:mm:ss"));
 		System.out.println(todaySformatowane);
+		
+		System.out.println(wyswietlDateSformatowana());
 
 		System.out.println(" Koniec działania programu");
+	}
+	
+	public static String wyswietlDateSformatowana() {
+		String todaySformatowane;
+		LocalDateTime today = LocalDateTime.now();
+		todaySformatowane = today.format(DateTimeFormatter.ofPattern("uuuu:MM:dd HH:mm:ss"));
+		return todaySformatowane;
 	}
 }
