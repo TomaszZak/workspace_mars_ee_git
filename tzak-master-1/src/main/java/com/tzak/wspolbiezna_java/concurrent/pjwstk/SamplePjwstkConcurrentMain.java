@@ -170,15 +170,16 @@ public class SamplePjwstkConcurrentMain {
 	 */
 	public static void testShedulerTaskow() {
 
+		System.out.println("Start: testShedulerTaskow()");
 		AktualnaDataSformatowana dataCzas = new  AktualnaDataSformatowana();
 
-		Runnable runnable1 = new Runnable() {
+/*		Runnable runnable1 = new Runnable() {
 			public void run() { // metoda wywolywana w watku - z wynikiem String
 				if (Thread.currentThread().isInterrupted())
 					return; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
 				System.out.println("\nStart Zadanie runnable 1 " + dataCzas.wyswietlDateSformatowana());
 				przykladoweOperacjeWPetli();
-				synchronizowanaPrzykladoweOperacjeWPetli();
+//				synchronizowanaPrzykladoweOperacjeWPetli();
 				System.out.println("\nKoniec zadania runnable 1 " + dataCzas.wyswietlDateSformatowana());
 			}
 		};
@@ -189,22 +190,32 @@ public class SamplePjwstkConcurrentMain {
 					return; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
 				System.out.println("\nStart Zadanie runnable 2 " + dataCzas.wyswietlDateSformatowana());
 				przykladoweOperacjeWPetli();
-				synchronizowanaPrzykladoweOperacjeWPetli();
+//				synchronizowanaPrzykladoweOperacjeWPetli();
 				System.out.println("\nKoniec zadania runnable 2 " + dataCzas.wyswietlDateSformatowana());
 			}
-		};
+		};*/
 		
 		scheduledExecutorServiceCreate();
 		
 		scheduledExecutorService.scheduleAtFixedRate(
-				runnable1  //sheduled dziala z Runnable a nie z FutureTask
+				pojedynczeZadanieBezWynikuRunnable  //sheduled dziala z Runnable a nie z FutureTask
 				, 0, 10, TimeUnit.SECONDS);  //opoznieie startu, przerwa od ostatniego STARTAMI, jednostka czasu
 		
-		scheduledExecutorService.scheduleAtFixedRate(
-				runnable2  //sheduled dziala z Runnable a nie z FutureTask
+/*		scheduledExecutorService.scheduleAtFixedRate (
+				pojedynczeZadanieBezWynikuRunnable  //sheduled dziala z Runnable a nie z FutureTask
 				, 0, 10, TimeUnit.SECONDS);  //opoznieie startu, przerwa od ostatniego kolejnymi STARTAMI, jednostka czasu
-
+*/
+		ScheduledFuture<?> sehduledFuture1 = scheduledExecutorService.scheduleAtFixedRate(
+				pojedynczeZadanieBezWynikuRunnable  //sheduled dziala z Runnable a nie z FutureTask
+				, 0, 10, TimeUnit.SECONDS);
 		
+		try {
+			Thread.sleep(1500);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		sehduledFuture1.cancel(true);
 		
 		System.out.println("Starting...");
 
@@ -283,7 +294,7 @@ public class SamplePjwstkConcurrentMain {
 			try { // sleep() jest przerywane pzrez interrupt()!
 				Thread.sleep(700);
 			} catch (InterruptedException exc) {
-				System.out.println("Wątek zliczania czasu został przerwany.");
+				System.out.println("Metoda: przykladoweOperacjeWPetli Wątek zliczania czasu został przerwany.");
 				return;
 			}
 		}
