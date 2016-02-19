@@ -10,9 +10,12 @@ import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.JOptionPane;
+
+import com.tzak.date_time.java8.AktualnaDataSformatowana;
 
 public class SamplePjwstkConcurrentMain {
 
@@ -25,6 +28,7 @@ public class SamplePjwstkConcurrentMain {
 	static FutureTask<String> pojedynczeZadanieFutureTaskCallableDone;
 	static KlasaZadaniaDoWykonaniaCallable pojedynczaKlasaZadanieDoWykonaniaCallable;
 	static ZadanieZObslugaPrzerwanZadan<String> klasaFutureTaskZObslugaPrzerwanZadan;
+	static ScheduledExecutorService scheduledExecutorService;   //wykorzystywany do harmonogramowego uruchamiania zadan
 
 	// ###################### MAIN
 	public static void main(String[] args) {
@@ -39,16 +43,16 @@ public class SamplePjwstkConcurrentMain {
 			public String call() throws Exception { // metoda wywolywana w watku - z wynikiem String
 				if (Thread.currentThread().isInterrupted())
 					return null; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
-				System.out.println("Wykonuje zadanie Callable: pojedynczeZadanieZWynikiemCallable");
+				System.out.println("\n Wykonuje zadanie Callable: pojedynczeZadanieZWynikiemCallable");
 				String result = null;
 
 				przykladoweOperacjeWPetli();
 
-				Thread.sleep(10000);
+/*				Thread.sleep(10000);
 				// uspienie watku - sleep(n) says “I’m done with my timeslice, and please don’t give me another one for at least n milliseconds.”
 				if (Thread.currentThread().isInterrupted())
 					return null; // chcemy przerwać możliwie najszybciej
-				
+*/				
 //				Thread.yield();
 //				wait();
 				try { // sleep() jest przerywane pzrez interrupt()!
@@ -66,19 +70,19 @@ public class SamplePjwstkConcurrentMain {
 			public void run() { // metoda wywolywana w watku - z wynikiem String
 				if (Thread.currentThread().isInterrupted())
 					return; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
-				System.out.println("Wykonuje zadanie Runnable: pojedynczeZadanieBezWynikuRunnable");
+				System.out.println("\n Wykonuje zadanie Runnable: pojedynczeZadanieBezWynikuRunnable");
 
 //				przykladoweOperacjeDoPrzerwaniaInterrupt();
 				przykladoweOperacjeWPetli();
 				// uspienie watku - sleep(n) says “I’m done with my timeslice, and please don’t give me another one for at least n milliseconds.”
-				if (Thread.currentThread().isInterrupted())
+/*				if (Thread.currentThread().isInterrupted())
 					return; // chcemy przerwać możliwie najszybciej
 				try { // sleep() jest przerywane pzrez interrupt()!
 					Thread.sleep(uspienieWykonywaniaWMiliSekundach);
 				} catch (InterruptedException exc) {
 					System.out.println("Wątek zliczania czasu został przerwany.");
 					return;
-				}
+				}*/
 			}
 		};
 
@@ -91,7 +95,7 @@ public class SamplePjwstkConcurrentMain {
 				for (int i = 1; i <= 3; i++) {
 					if (Thread.currentThread().isInterrupted())
 						return null; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
-					System.out.println("Wykonuje zadanie Callable: pojedynczeZadanieZWynikiemCallable");
+					System.out.println("\n Wykonuje zadanie Callable: pojedynczeZadanieZWynikiemCallable");
 
 					przykladoweOperacjeWPetli();
 
@@ -151,56 +155,61 @@ public class SamplePjwstkConcurrentMain {
 //		taskStartCallableFutureTask(zadanieCallableBezPrzerwania1);
 		
 
-//		taskStartCallableFutureTask(zadanieZPrzerwaniem1);
-//		taskStartCallableFutureTask(zadanieZPrzerwaniem2);
+		taskStartCallableFutureTask(zadanieZPrzerwaniem1);
+		taskStartCallableFutureTask(zadanieZPrzerwaniem2);
 
 //		exec.shutdown();
-		
-		ScheduledExecutorService scheduledExecutorService =
-		        Executors.newScheduledThreadPool(5); //5 watkow w puli
 
-ScheduledFuture scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(zadanieZPrzerwaniem1,1,7, TimeUnit.SECONDS);
-//System.out.println("Czy zakonczono watki?");
-//System.out.println(scheduledFuture.isDone());
 
 	}
 	
+	/** Metoda uruchamia wątek w pętli co określone przerwy czasowe
+	 * ScheduledExecutorService nie obsługuje FutureTaskow. Najlepiej wykorzystać Runnablre
+	 * Wyjaśnienie: 
+	 * The problem is that FutureTask is used, and as its class documentation says, "Once the computation has completed, the computation cannot be restarted or cancelled."
+	 */
 	public static void testShedulerTaskow() {
-		FutureTask<Boolean> zadanieBezPrzerwania2 = new FutureTask<Boolean>(pojedynczeZadanieBezWynikuRunnable, true);
-		// given
-		Random random = new Random();
-		ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
-		// when
-		executorService.scheduleAtFixedRate(
-//				zadanieBezPrzerwania2
-				new Runnable() {
-					private int i = 1;
 
-					@Override
-					public void run() {
-						System.out.println("Iteration[{}]");
-						i++;
-						try {
-							Thread.sleep(300);
-						} catch (InterruptedException e) {
-						}
-					}
-				}
-				
-				, 200, 1000, TimeUnit.MILLISECONDS);
+		AktualnaDataSformatowana dataCzas = new  AktualnaDataSformatowana();
+
+		Runnable runnable1 = new Runnable() {
+			public void run() { // metoda wywolywana w watku - z wynikiem String
+				if (Thread.currentThread().isInterrupted())
+					return; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
+				System.out.println("\nStart Zadanie runnable 1 " + dataCzas.wyswietlDateSformatowana());
+				przykladoweOperacjeWPetli();
+				synchronizowanaPrzykladoweOperacjeWPetli();
+				System.out.println("\nKoniec zadania runnable 1 " + dataCzas.wyswietlDateSformatowana());
+			}
+		};
+		
+		Runnable runnable2 = new Runnable() {
+			public void run() { // metoda wywolywana w watku - z wynikiem String
+				if (Thread.currentThread().isInterrupted())
+					return; // Metoda interrupt() ustala jedynie status wątku jako przerwany, a zakończenie pracy wątku odbywa się zawsze przez zakończenie jego kodu.
+				System.out.println("\nStart Zadanie runnable 2 " + dataCzas.wyswietlDateSformatowana());
+				przykladoweOperacjeWPetli();
+				synchronizowanaPrzykladoweOperacjeWPetli();
+				System.out.println("\nKoniec zadania runnable 2 " + dataCzas.wyswietlDateSformatowana());
+			}
+		};
+		
+		scheduledExecutorServiceCreate();
+		
+		scheduledExecutorService.scheduleAtFixedRate(
+				runnable1  //sheduled dziala z Runnable a nie z FutureTask
+				, 0, 10, TimeUnit.SECONDS);  //opoznieie startu, przerwa od ostatniego STARTAMI, jednostka czasu
+		
+		scheduledExecutorService.scheduleAtFixedRate(
+				runnable2  //sheduled dziala z Runnable a nie z FutureTask
+				, 0, 10, TimeUnit.SECONDS);  //opoznieie startu, przerwa od ostatniego kolejnymi STARTAMI, jednostka czasu
+
+		
+		
 		System.out.println("Starting...");
 
 		try {
-			Thread.sleep(2000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	//	executorService.shutdown();
-		System.out.println("... finished!");
-		try {
-			executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+			scheduledExecutorService.awaitTermination(5, TimeUnit.SECONDS);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -255,16 +264,19 @@ ScheduledFuture scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(z
 		}
 	}
 
-	// metoda jest synchronizowana- zapewnia, że kilka wykonujących się wątków nie będzie równocześnie wykonywać tego samego kodu, w szczególności - działać na tym samym obiekcie.
-	synchronized public static void przykladoweOperacjeWPetli() {
+	/**Przykładowa petla operacji - BEZ SYNCHRONIZACJI
+	 * 
+	 */
+	public static void przykladoweOperacjeWPetli() {
 		String name = "przykladoweOperacjeWPetli";
+		
+		
 		for (int i = 1; i <= 10; i++) {
 			if (Thread.currentThread().isInterrupted())
 				return;
 			System.out.print(i + " ");
 			//Thread.yield(); //yield - pozwala wejść do kolejki innym wątkom jezeli ten jest bezczynny
-			
-			
+		
 			//opuznienie w zadaniu
 			if (Thread.currentThread().isInterrupted())
 				return; // chcemy przerwać możliwie najszybciej
@@ -275,6 +287,15 @@ ScheduledFuture scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(z
 				return;
 			}
 		}
+	}
+	
+	
+	/** SYNCHRONIZOWANA
+	 * To samo co metoda: przykladoweOperacjeWPetli() tylko, ze SYNCHRONIZOWANA
+	 * metoda jest synchronizowana- zapewnia, że kilka wykonujących się wątków nie będzie równocześnie wykonywać tego samego kodu, w szczególności - działać na tym samym obiekcie.
+	 */
+	synchronized public static void synchronizowanaPrzykladoweOperacjeWPetli() {
+		przykladoweOperacjeWPetli();
 	}
 
 	/**
@@ -319,6 +340,21 @@ ScheduledFuture scheduledFuture = scheduledExecutorService.scheduleAtFixedRate(z
 		 exec = Executors.newCachedThreadPool(); //Wykonawca,prowadzący pulę wątków o dynamicznych rozmiarach
 //		exec = Executors.newFixedThreadPool(2);
 //		exec = Executors.newSingleThreadExecutor(); // jeden wątek - pula z obsluga jednego watku na raz
+	}
+	
+	public static void scheduledExecutorServiceCreate() {
+		System.out.println("Liczba dostepnych procesorow: " + Runtime.getRuntime().availableProcessors());
+		scheduledExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
+		
+		//opcja z kontrola tworzonego nowego wotku
+/*		ScheduledExecutorService executorService = Executors.newScheduledThreadPool(5, new ThreadFactory() {
+            @Override
+            public Thread newThread(Runnable r) {
+                System.out.println("Tworzę nowy wątek");
+                return new Thread(r);
+            }
+        }); 
+		*/
 	}
 
 	public void executorShutdown() {
