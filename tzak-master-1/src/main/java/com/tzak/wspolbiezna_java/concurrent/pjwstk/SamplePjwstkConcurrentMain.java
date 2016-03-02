@@ -201,13 +201,14 @@ public class SamplePjwstkConcurrentMain {
 				pojedynczeZadanieBezWynikuRunnable  //sheduled dziala z Runnable a nie z FutureTask
 				, 0, 10, TimeUnit.SECONDS);  //opoznieie startu, przerwa od ostatniego STARTAMI, jednostka czasu
 		
-/*		scheduledExecutorService.scheduleAtFixedRate (
-				pojedynczeZadanieBezWynikuRunnable  //sheduled dziala z Runnable a nie z FutureTask
-				, 0, 10, TimeUnit.SECONDS);  //opoznieie startu, przerwa od ostatniego kolejnymi STARTAMI, jednostka czasu
-*/
 		ScheduledFuture<?> sehduledFuture1 = scheduledExecutorService.scheduleAtFixedRate(
 				pojedynczeZadanieBezWynikuRunnable  //sheduled dziala z Runnable a nie z FutureTask
 				, 0, 10, TimeUnit.SECONDS);
+		ScheduledFuture<?> sehduledFuture2 = scheduledExecutorService.scheduleAtFixedRate(
+				pojedynczeZadanieBezWynikuRunnable  //sheduled dziala z Runnable a nie z FutureTask
+				, 0, 10, TimeUnit.SECONDS);
+		
+		System.out.println("Starting...");
 		
 		try {
 			Thread.sleep(1500);
@@ -215,9 +216,10 @@ public class SamplePjwstkConcurrentMain {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		System.out.println("\nAnulowanie zadania: sehduledFuture1.cancel(true)");
 		sehduledFuture1.cancel(true);
 		
-		System.out.println("Starting...");
+		
 
 		try {
 			scheduledExecutorService.awaitTermination(5, TimeUnit.SECONDS);
@@ -342,7 +344,7 @@ public class SamplePjwstkConcurrentMain {
 	}
 
 	/**
-	 * Metoda tworzy wykonawce zadan - obsluga watkow Bez ustawie czasowych, opóźnień i terminów
+	 * Metoda tworzy wykonawce zadan - obsluga watkow Bez ustawien czasowych, opóźnień i terminów
 	 */
 	public static void executorCreate() {
 
@@ -353,8 +355,11 @@ public class SamplePjwstkConcurrentMain {
 //		exec = Executors.newSingleThreadExecutor(); // jeden wątek - pula z obsluga jednego watku na raz
 	}
 	
+	/**
+	 * Metoda tworzy wykonawce zadan - obsluga watkow z ustawieniami czasowymi, opóźnieniami i terminami
+	 */
 	public static void scheduledExecutorServiceCreate() {
-		System.out.println("Liczba dostepnych procesorow: " + Runtime.getRuntime().availableProcessors());
+		System.out.println("Metoda: scheduledExecutorServiceCreate \n Liczba dostepnych procesorow: " + Runtime.getRuntime().availableProcessors());
 		scheduledExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 		
 		//opcja z kontrola tworzonego nowego wotku
