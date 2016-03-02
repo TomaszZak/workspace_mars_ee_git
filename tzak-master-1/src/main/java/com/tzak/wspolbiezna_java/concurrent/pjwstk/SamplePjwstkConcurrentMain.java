@@ -32,7 +32,7 @@ public class SamplePjwstkConcurrentMain {
 
 	// ###################### MAIN
 	public static void main(String[] args) {
-
+		
 		uspienieWykonywaniaWMiliSekundach = 10; //3600000; // uśpienie na godzinę
 
 		// ####### tworzenie przykładow obiektow do wykonania w watkach
@@ -208,6 +208,7 @@ public class SamplePjwstkConcurrentMain {
 				pojedynczeZadanieBezWynikuRunnable  //sheduled dziala z Runnable a nie z FutureTask
 				, 0, 10, TimeUnit.SECONDS);
 		
+		
 		System.out.println("Starting...");
 		
 		try {
@@ -362,7 +363,7 @@ public class SamplePjwstkConcurrentMain {
 		System.out.println("Metoda: scheduledExecutorServiceCreate \n Liczba dostepnych procesorow: " + Runtime.getRuntime().availableProcessors());
 		scheduledExecutorService = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors());
 		
-		//opcja z kontrola tworzonego nowego wotku
+		//opcja z kontrola tworzonego nowego watku
 /*		ScheduledExecutorService executorService = Executors.newScheduledThreadPool(5, new ThreadFactory() {
             @Override
             public Thread newThread(Runnable r) {
