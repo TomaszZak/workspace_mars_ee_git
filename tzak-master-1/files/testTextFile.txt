@@ -1,4 +1,5 @@
 Testowa zawartość linijka 1
 linijka 2
 linijka 3
+linijjka 
 koniec pliku
