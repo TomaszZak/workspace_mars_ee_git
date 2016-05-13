@@ -8,7 +8,9 @@ public class LabmbdaTest1 {
 		scenariuszTestowy1.testLambda1();
 		scenariuszTestowy1.testLambda2();
 		scenariuszTestowy1.testLambda3BlokLambda();
-
+		scenariuszTestowy1.testLambdaGeneryczna();
+		scenariuszTestowy1.testLambdaBoolean1();
+		
 	}
 
 	
@@ -71,7 +73,33 @@ public class LabmbdaTest1 {
 		};
 		
 		System.out.println(blokDzialanMatematycznych.wynik(23, 12));
+	}
+	
+	public void testLambdaGeneryczna() {
+		System.out.println("\n" + Thread.currentThread().getStackTrace()[1].getMethodName());
+		LambdaInterfaceGeneric<String> lambdaGeneryczna;
+	
+		//Lambda typu String
+		//przypisanie bloku lambda do interfejsu
+		lambdaGeneryczna = (s) -> {
+			String odTylu="";
+			for (int i = s.length()-1; i>=0; i-- ) {
+				odTylu += s.charAt(i);
+			}
+			return odTylu;
+		};
+		System.out.println("Lambda od tylu to: " + lambdaGeneryczna.wartoscGeneric("Lambda"));		
+	}
+	
+	public void testLambdaBoolean1() {
+		System.out.println("\n" + Thread.currentThread().getStackTrace()[1].getMethodName());
+
+		LambdaInterfaceBoolean1 czySumaWiekszaOd10;
+		czySumaWiekszaOd10 = (a,b) -> (a+b) > 10;  //jeśli warunek jest spełniony to zrwaca TRUE
+		if(czySumaWiekszaOd10.test(4, 5)) {
+			System.out.println("Suma Liczb jest większa od 10");
+		}
+		else System.out.println("Suma liczb jest mniejsza od 10");
 		
 	}
-
 }
